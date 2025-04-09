@@ -7,6 +7,7 @@ type Loan struct {
 	UserID               uint64
 	PrincipalAmount      float64
 	Rate                 uint32
+	LoanDuration         uint32
 	Status               int8
 	ProposedDate         time.Time
 	PictureProofFilePath string
@@ -14,4 +15,19 @@ type Loan struct {
 	ApprovalDate         time.Time
 	DisburserUID         uint64
 	DisbursedDate        time.Time
+}
+
+const (
+	// Loan Status
+	Proposed int8 = iota
+	Approved
+	Invested
+	Disbursed
+)
+
+var LoanStatusMapping = map[int8]string{
+	Proposed:  "Proposed",
+	Approved:  "Approved",
+	Invested:  "Invested",
+	Disbursed: "Disbursed",
 }

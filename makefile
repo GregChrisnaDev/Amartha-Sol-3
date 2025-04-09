@@ -63,6 +63,9 @@ migration: tool-migrate
 
 migrate: tool-migrate
 	${CUR_DIR}/bin/migrate -path ${CUR_DIR}/migrations/ -database "$(DB)" -verbose up
+	
+migrate-down: tool-migrate
+	${CUR_DIR}/bin/migrate -path ${CUR_DIR}/migrations/ -database "$(DB)" -verbose down
 
 run:
 	go run cmd/main.go

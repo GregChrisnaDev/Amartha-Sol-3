@@ -18,15 +18,19 @@ func main() {
 
 	// init repository
 	userRepo := repository.InitUserRepo(pgClient)
+	loanRepo := repository.InitLoanRepo(pgClient)
 
 	// init usecase
 	userUC := usecase.InitUserUC(userRepo)
+	loanUC := usecase.InitLoanUC(loanRepo)
 
 	// init handler
 	userHandler := handler.InitUserHandler(userUC)
+	loanHandler := handler.InitLoanHandler(userUC, loanUC)
 
 	r := server.RegisterRoute(server.Handlers{
 		UserHandler: userHandler,
+		LoanHandler: loanHandler,
 	})
 
 	// Start server

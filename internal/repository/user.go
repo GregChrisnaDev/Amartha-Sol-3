@@ -2,15 +2,15 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"time"
 
 	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/model"
+	"github.com/jmoiron/sqlx"
 )
 
 type userRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 type UserRepository interface {
@@ -28,7 +28,7 @@ type user struct {
 	CreatedAt    time.Time `db:"created_at"`
 }
 
-func InitUserRepo(db *sql.DB) UserRepository {
+func InitUserRepo(db *sqlx.DB) UserRepository {
 	return &userRepository{
 		db: db,
 	}

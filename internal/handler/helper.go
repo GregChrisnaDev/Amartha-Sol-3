@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/usecase"
 )
 
 func writeJSON(w http.ResponseWriter, statusCode int, message string, data interface{}) {
@@ -15,4 +17,13 @@ func writeJSON(w http.ResponseWriter, statusCode int, message string, data inter
 		Data:    data,
 	}
 	json.NewEncoder(w).Encode(resp)
+}
+
+func validateUserAuth(r *http.Request, userUC usecase.UserUsecase) uint64 {
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		return 0
+	}
+
+	return userUC.ValidateUser(r.Context(), usecase.ValidateUserReq{Name: username, Password: password})
 }
