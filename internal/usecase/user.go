@@ -15,7 +15,7 @@ type userUsecase struct {
 type UserUsecase interface {
 	GenerateUser(ctx context.Context, params UserGenerateReq) (UserResp, error)
 	GetAllUser(ctx context.Context) ([]UserResp, error)
-	ValidateUser(ctx context.Context, params ValidateUserReq) uint64
+	ValidateUser(ctx context.Context, params ValidateUserReq) *model.User
 }
 
 func InitUserUC(userRepo repository.UserRepository) UserUsecase {
@@ -63,15 +63,15 @@ func (u *userUsecase) GetAllUser(ctx context.Context) ([]UserResp, error) {
 	return resp, nil
 }
 
-func (u *userUsecase) ValidateUser(ctx context.Context, params ValidateUserReq) uint64 {
+func (u *userUsecase) ValidateUser(ctx context.Context, params ValidateUserReq) *model.User {
 	user, err := u.userRepo.Get(ctx, params.Name)
 	if err != nil {
-		return 0
+		return nil
 	}
 
 	if common.MD5Hasher(params.Password) == user.PasswordHash {
-		return user.ID
+		return &user
 	}
 
-	return 0
+	return nil
 }

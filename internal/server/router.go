@@ -20,6 +20,8 @@ func RegisterRoute(handlers Handlers) *mux.Router {
 	loanRouter := r.PathPrefix("/loan").Subrouter()
 	loanRouter.HandleFunc("/propose", handlers.LoanHandler.ProposeLoanHandler).Methods("POST")
 	loanRouter.HandleFunc("/get-all", handlers.LoanHandler.GetLoanByUIDHandler).Methods("GET")
+	loanRouter.HandleFunc("/approve", handlers.LoanHandler.ApproveLoanHandler).Methods("POST")
+	loanRouter.HandleFunc("/proof-pict", handlers.LoanHandler.GetProofPictureHandler).Methods("GET")
 
 	return r
 }

@@ -20,6 +20,8 @@ type LoanRepository interface {
 	GetLoanByUID(ctx context.Context, userId uint64) ([]model.Loan, error)
 	PendingLoanExist(ctx context.Context, userId uint64) (bool, error)
 	GetLoanByID(ctx context.Context, loanId uint64) (model.Loan, error)
+	PromoteLoanToApproved(ctx context.Context, params model.Loan) error
+	LoanExist(ctx context.Context, loanId uint64, status int8) (bool, error)
 }
 
 type loan struct {
@@ -102,8 +104,34 @@ func (r *loanRepository) PendingLoanExist(ctx context.Context, userId uint64) (b
 	return exist, nil
 }
 
+func (r *loanRepository) LoanExist(ctx context.Context, loanId uint64, status int8) (bool, error) {
+	var exist bool
+	var err error
+	args := []interface{}{loanId}
+	query := "SELECT 1 FROM loans WHERE id = $1"
+	if status != 0 {
+		query += " AND status = $2"
+		query, args, err = sqlx.In(query, loanId, status)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	query = r.db.Rebind(query)
+	err = r.db.GetContext(ctx, &exist, query, args...)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		log.Println("[LoanRepo][LoanExist] error while scan", err.Error())
+		return false, err
+	}
+
+	return exist, nil
+}
+
 func (r *loanRepository) GetLoanByID(ctx context.Context, loanId uint64) (model.Loan, error) {
-	row := r.db.QueryRowContext(ctx, "SELECT id, user_id, principal_amount, rate, loan_duration, status, proposed_date, picture_proof_filepath, approver_uid, approval_date, disburser_uid, disbursement_date FROM loans WHERE id = ?", loanId)
+	row := r.db.QueryRowContext(ctx, "SELECT id, user_id, principal_amount, rate, loan_duration, status, proposed_date, picture_proof_filepath, approver_uid, approval_date, disburser_uid, disbursement_date FROM loans WHERE id = $1", loanId)
 
 	var loan loan
 	err := row.Scan(&loan.ID, &loan.UserID, &loan.PrincipalAmount, &loan.Rate, &loan.LoanDuration, &loan.Status, &loan.ProposedDate, &loan.PictureProofFilePath, &loan.ApproverUID, &loan.ApprovalDate, &loan.DisburserUID, &loan.DisbursedDate)
@@ -126,4 +154,13 @@ func (r *loanRepository) GetLoanByID(ctx context.Context, loanId uint64) (model.
 		DisburserUID:         uint64(loan.DisburserUID.Int64),
 		DisbursedDate:        loan.DisbursedDate.Time,
 	}, nil
+}
+
+func (r *loanRepository) PromoteLoanToApproved(ctx context.Context, params model.Loan) error {
+	if _, err := r.db.ExecContext(ctx, "UPDATE loans SET picture_proof_filepath=$1, approver_uid=$2, approval_date=NOW(), status=$3 WHERE id=$4", params.PictureProofFilePath, params.ApproverUID, model.Approved, params.ID); err != nil {
+		log.Println("[LoanRepo][PromoteLoanToApproved] error while promote loan to approved", err.Error())
+		return err
+	}
+
+	return nil
 }

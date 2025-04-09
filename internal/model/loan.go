@@ -19,7 +19,7 @@ type Loan struct {
 
 const (
 	// Loan Status
-	Proposed int8 = iota
+	Proposed int8 = iota + 1
 	Approved
 	Invested
 	Disbursed

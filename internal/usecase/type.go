@@ -1,6 +1,10 @@
 package usecase
 
-import "time"
+import (
+	"bytes"
+	"os"
+	"time"
+)
 
 type UserGenerateReq struct {
 	Name     string `json:"name"`
@@ -17,8 +21,8 @@ type UserResp struct {
 }
 
 type ValidateUserReq struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Name     string
+	Password string
 }
 
 type ProposeLoanReq struct {
@@ -41,4 +45,15 @@ type GetLoanResp struct {
 	ApprovalDate         time.Time `json:"approval_date,omitempty"`
 	DisburserUID         uint64    `json:"disburser_uid,omitempty"`
 	DisbursedDate        time.Time `json:"disbursement_date,omitempty"`
+}
+
+type PromoteLoanToApprovedReq struct {
+	LoanID       uint64
+	ApproverID   uint64
+	PictureProof *bytes.Buffer
+}
+
+type GetProofPictureResp struct {
+	Image    *os.File
+	Filename string
 }

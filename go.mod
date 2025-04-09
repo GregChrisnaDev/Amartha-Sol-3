@@ -3,6 +3,7 @@ module github.com/GregChrisnaDev/Amartha-Sol-3
 go 1.23.2
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/leekchan/accounting v1.0.0

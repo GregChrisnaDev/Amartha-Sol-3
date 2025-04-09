@@ -3,3 +3,4 @@
 vendor/
 .env
 bin/
+etc/storage
