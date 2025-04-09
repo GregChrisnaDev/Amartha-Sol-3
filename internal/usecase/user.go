@@ -1,0 +1,73 @@
+package usecase
+
+import (
+	"context"
+
+	"github.com/GregChrisnaDev/Amartha-Sol-3/common"
+	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/model"
+	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/repository"
+)
+
+type userUsecase struct {
+	userRepo repository.UserRepository
+}
+
+type UserUsecase interface {
+	GenerateUser(ctx context.Context, params UserGenerateReq) (UserResp, error)
+	GetAllUser(ctx context.Context) ([]UserResp, error)
+	ValidateUser(ctx context.Context, params ValidateUserReq) bool
+}
+
+func InitUserUC(userRepo repository.UserRepository) UserUsecase {
+	return &userUsecase{
+		userRepo: userRepo,
+	}
+}
+
+func (u *userUsecase) GenerateUser(ctx context.Context, params UserGenerateReq) (UserResp, error) {
+	//hash password using md5 to simplify
+	params.Password = common.MD5Hasher(params.Password)
+
+	if err := u.userRepo.Add(ctx, model.User{
+		Name:         params.Name,
+		Address:      params.Address,
+		Role:         params.Role,
+		PasswordHash: params.Password,
+	}); err != nil {
+		return UserResp{}, err
+	}
+
+	return UserResp{
+		Name:    params.Name,
+		Address: params.Address,
+		Role:    model.RoleMap[params.Role],
+	}, nil
+}
+
+func (u *userUsecase) GetAllUser(ctx context.Context) ([]UserResp, error) {
+	users, err := u.userRepo.GetAll(ctx)
+	if err != nil {
+		return []UserResp{}, nil
+	}
+
+	var resp []UserResp
+	for _, v := range users {
+		resp = append(resp, UserResp{
+			Name:     v.Name,
+			Address:  v.Address,
+			Role:     model.RoleMap[v.Role],
+			Password: v.PasswordHash, // for testing purpose
+		})
+	}
+
+	return resp, nil
+}
+
+func (u *userUsecase) ValidateUser(ctx context.Context, params ValidateUserReq) bool {
+	user, err := u.userRepo.Get(ctx, params.Name)
+	if err != nil {
+		return false
+	}
+
+	return common.MD5Hasher(params.Password) == user.PasswordHash
+}
