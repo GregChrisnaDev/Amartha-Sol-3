@@ -31,7 +31,7 @@ func (h *userHandler) UserGenerateHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if req.Name == "" || req.Address == "" || req.Password == "" {
+	if req.Name == "" || req.Address == "" || req.Email == "" || req.Password == "" {
 		writeJSON(w, http.StatusBadRequest, "Missing parameter", nil)
 		return
 	}

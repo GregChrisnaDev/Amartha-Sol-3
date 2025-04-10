@@ -19,6 +19,10 @@ type LoanHandler interface {
 	GetLoanByUIDHandler(w http.ResponseWriter, r *http.Request)
 	ApproveLoanHandler(w http.ResponseWriter, r *http.Request)
 	GetProofPictureHandler(w http.ResponseWriter, r *http.Request)
+	GetListApprovedLoanHandler(w http.ResponseWriter, r *http.Request)
+	DisburseLoanHandler(w http.ResponseWriter, r *http.Request)
+	GetAgreementLetterHandler(w http.ResponseWriter, r *http.Request)
+	GetListLenderHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func InitLoanHandler(userUC usecase.UserUsecase, loanUC usecase.LoanUsecase) LoanHandler {
@@ -102,7 +106,7 @@ func (h *loanHandler) ApproveLoanHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	imageBuf, err := convertImageToBuffer(r)
+	imageBuf, err := convertImageToBuffer(r, "proof_image")
 	if err != nil {
 		writeJSON(w, http.StatusUnauthorized, "Failed parse image", nil)
 		return
@@ -144,11 +148,142 @@ func (h *loanHandler) GetProofPictureHandler(w http.ResponseWriter, r *http.Requ
 		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
 		return
 	}
-	defer resp.Image.Close()
+	defer resp.File.Close()
 
-	stat, _ := resp.Image.Stat()
+	stat, _ := resp.File.Stat()
 
 	w.Header().Set("Content-Type", "image/jpg")
 	w.Header().Set("Content-Disposition", "inline; filename=\""+resp.Filename+"\"")
-	http.ServeContent(w, r, resp.Filename, stat.ModTime(), resp.Image)
+	http.ServeContent(w, r, resp.Filename, stat.ModTime(), resp.File)
+}
+
+func (h *loanHandler) GetListApprovedLoanHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// validate auth
+	user := validateUserAuth(r, h.userUC, 0)
+	if user == nil {
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+
+	resp, err := h.loanUC.GetListApprovedLoan(ctx)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, "Success", resp)
+}
+
+func (h *loanHandler) DisburseLoanHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// validate auth
+	user := validateUserAuth(r, h.userUC, model.Employee)
+	if user == nil {
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+
+	// Limit request body size (10MB)
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		writeJSON(w, http.StatusUnauthorized, "Failed to parse multipart form", nil)
+		return
+	}
+
+	loanId, err := strconv.ParseUint(r.FormValue("loan_id"), 10, 64)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		return
+	}
+
+	imageBuf, err := convertImageToBuffer(r, "user_sign")
+	if err != nil {
+		writeJSON(w, http.StatusUnauthorized, "Failed parse image", nil)
+		return
+	}
+
+	req := usecase.PromoteLoanToDisburseReq{
+		LoanID:      loanId,
+		DisburserID: user.ID,
+		UserSign:    imageBuf,
+	}
+
+	err = h.loanUC.DisbursedLoan(ctx, req)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, "Success", nil)
+}
+
+func (h *loanHandler) GetAgreementLetterHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// validate auth
+	user := validateUserAuth(r, h.userUC, model.Customer)
+	if user == nil {
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+
+	lendId, err := strconv.ParseUint(r.URL.Query().Get("lend_id"), 10, 64)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		return
+	}
+
+	loanId, err := strconv.ParseUint(r.URL.Query().Get("loan_id"), 10, 64)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		return
+	}
+
+	resp, err := h.loanUC.GetAgreementLetter(ctx, usecase.GetAgreementLetterReq{
+		User:   user,
+		LendID: lendId,
+		LoanID: loanId,
+	})
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		return
+	}
+	defer resp.File.Close()
+
+	stat, _ := resp.File.Stat()
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "inline; filename=\""+resp.Filename+"\"")
+	http.ServeContent(w, r, resp.Filename, stat.ModTime(), resp.File)
+}
+
+func (h *loanHandler) GetListLenderHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// validate auth
+	user := validateUserAuth(r, h.userUC, model.Customer)
+	if user == nil {
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+
+	loanId, err := strconv.ParseUint(r.URL.Query().Get("loan_id"), 10, 64)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		return
+	}
+
+	resp, err := h.loanUC.GetListLender(ctx, usecase.GetListLender{
+		UserID: user.ID,
+		LoanID: loanId,
+	})
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, "Success", resp)
 }

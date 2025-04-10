@@ -22,6 +22,17 @@ func RegisterRoute(handlers Handlers) *mux.Router {
 	loanRouter.HandleFunc("/get-all", handlers.LoanHandler.GetLoanByUIDHandler).Methods("GET")
 	loanRouter.HandleFunc("/approve", handlers.LoanHandler.ApproveLoanHandler).Methods("POST")
 	loanRouter.HandleFunc("/proof-pict", handlers.LoanHandler.GetProofPictureHandler).Methods("GET")
+	loanRouter.HandleFunc("/list-approved-loan", handlers.LoanHandler.GetListApprovedLoanHandler).Methods("GET")
+	loanRouter.HandleFunc("/disburse", handlers.LoanHandler.DisburseLoanHandler).Methods("POST")
+	loanRouter.HandleFunc("/agreement-letter", handlers.LoanHandler.GetAgreementLetterHandler).Methods("GET")
+	loanRouter.HandleFunc("/list-lender", handlers.LoanHandler.GetListLenderHandler).Methods("GET")
+
+	// lend route group
+	lendRoute := r.PathPrefix("/lend").Subrouter()
+	lendRoute.HandleFunc("/simulate", handlers.LendHandler.SimulateHandler).Methods("POST")
+	lendRoute.HandleFunc("/list-lend", handlers.LendHandler.GetListLenderHandler).Methods("GET")
+	lendRoute.HandleFunc("/invest", handlers.LendHandler.InvestHandler).Methods("POST")
+	lendRoute.HandleFunc("/agreement-letter", handlers.LendHandler.GetAgreementLetterHandler).Methods("GET")
 
 	return r
 }

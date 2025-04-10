@@ -14,6 +14,7 @@ type Loan struct {
 	ApproverUID          uint64
 	ApprovalDate         time.Time
 	DisburserUID         uint64
+	UserSignPath         string
 	DisbursedDate        time.Time
 }
 

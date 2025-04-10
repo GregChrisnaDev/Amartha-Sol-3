@@ -11,6 +11,7 @@ CREATE TABLE loans
     approver_uid            BIGINT,
     approval_date           TIMESTAMP WITH TIME ZONE,
     disburser_uid           BIGINT,
+    user_sign_path          VARCHAR(255),
     disbursement_date       TIMESTAMP WITH TIME ZONE
 );
 

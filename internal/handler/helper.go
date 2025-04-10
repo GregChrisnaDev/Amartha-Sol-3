@@ -30,7 +30,7 @@ func validateUserAuth(r *http.Request, userUC usecase.UserUsecase, expectedRole 
 		return nil
 	}
 
-	user := userUC.ValidateUser(r.Context(), usecase.ValidateUserReq{Name: username, Password: password})
+	user := userUC.ValidateUser(r.Context(), usecase.ValidateUserReq{Email: username, Password: password})
 	if user == nil {
 		return nil
 	}
@@ -43,8 +43,8 @@ func validateUserAuth(r *http.Request, userUC usecase.UserUsecase, expectedRole 
 
 }
 
-func convertImageToBuffer(r *http.Request) (*bytes.Buffer, error) {
-	file, _, err := r.FormFile("image")
+func convertImageToBuffer(r *http.Request, paramName string) (*bytes.Buffer, error) {
+	file, _, err := r.FormFile(paramName)
 	if err != nil {
 		log.Println("[convertImageToBuffer] error get image", err.Error())
 		return nil, err

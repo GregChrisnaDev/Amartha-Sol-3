@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"os"
 	"time"
+
+	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/model"
 )
 
 type UserGenerateReq struct {
 	Name     string `json:"name"`
 	Address  string `json:"address"`
 	Password string `json:"password"`
+	Email    string `json:"email"`
 	Role     int    `json:"role"`
 }
 
@@ -17,11 +20,12 @@ type UserResp struct {
 	Name     string `json:"name"`
 	Address  string `json:"address"`
 	Role     string `json:"role"`
+	Email    string `json:"email"`
 	Password string `json:"password,omitempty"` // this only use for testing purpose to simplify when needed
 }
 
 type ValidateUserReq struct {
-	Name     string
+	Email    string
 	Password string
 }
 
@@ -53,7 +57,53 @@ type PromoteLoanToApprovedReq struct {
 	PictureProof *bytes.Buffer
 }
 
-type GetProofPictureResp struct {
-	Image    *os.File
+type FileResp struct {
+	File     *os.File
 	Filename string
+}
+
+type LendSimulateReq struct {
+	UserID uint64
+	LoanID uint64  `json:"loan_id"`
+	Amount float64 `json:"amount"`
+}
+
+type LendSimulateResp struct {
+	ROI    float64 `json:"roi"`
+	Profit string  `json:"profit"`
+}
+
+type InvestReq struct {
+	Lender   *model.User
+	LoanID   uint64
+	Amount   float64
+	UserSign *bytes.Buffer
+}
+
+type PromoteLoanToDisburseReq struct {
+	LoanID      uint64
+	DisburserID uint64
+	UserSign    *bytes.Buffer
+}
+
+type GetAgreementLetterReq struct {
+	User   *model.User
+	LendID uint64
+	LoanID uint64
+}
+
+type GetListLender struct {
+	UserID uint64
+	LoanID uint64
+}
+
+type GetLendResp struct {
+	ID                uint64    `json:"id"`
+	LoanID            uint64    `json:"loan_id"`
+	UserID            uint64    `json:"user_id"`
+	Amount            string    `json:"amount"`
+	UserSignPath      string    `json:"user_sign_path,omitempty"`
+	AgreementFilePath string    `json:"agreement_file_path"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }

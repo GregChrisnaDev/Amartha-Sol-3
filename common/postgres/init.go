@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -9,7 +10,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func Init() *sqlx.DB {
+type DB struct {
+	*sqlx.DB
+}
+
+func Init() DB {
 	connStr := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?%s",
 		os.Getenv("DB_USERNAME"),
@@ -29,5 +34,14 @@ func Init() *sqlx.DB {
 		log.Fatalln("[InitPostgres] error connecting to DB:", err.Error())
 	}
 
-	return db
+	return DB{
+		db,
+	}
+}
+
+func (r DB) ConnTx(ctx context.Context) Transaction {
+	if tx := extractTx(ctx); tx != nil {
+		return tx
+	}
+	return r
 }

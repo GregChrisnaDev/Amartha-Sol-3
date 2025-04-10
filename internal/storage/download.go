@@ -9,7 +9,7 @@ type DownloadFileResp struct {
 	File *os.File
 }
 
-func (s *storageClient) DownloadFile(path string) (DownloadFileResp, error) {
+func (s *client) DownloadFile(path string) (DownloadFileResp, error) {
 	f, err := os.Open(s.mainPath + path)
 	if err != nil {
 		log.Println("[DownloadFile] image not found", err.Error())

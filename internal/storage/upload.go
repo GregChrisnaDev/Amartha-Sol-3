@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func (s *storageClient) UploadImage(fileData []byte, dest, filename string) error {
+func (s *client) UploadImage(fileData []byte, dest, filename string) error {
 	if err := os.MkdirAll(s.mainPath+dest, os.ModePerm); err != nil {
 		log.Println("[UploadImage] error while mkdir", err.Error())
 		return err

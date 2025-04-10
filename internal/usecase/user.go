@@ -32,6 +32,7 @@ func (u *userUsecase) GenerateUser(ctx context.Context, params UserGenerateReq) 
 		Name:         params.Name,
 		Address:      params.Address,
 		Role:         params.Role,
+		Email:        params.Email,
 		PasswordHash: params.Password,
 	}); err != nil {
 		return UserResp{}, err
@@ -40,6 +41,7 @@ func (u *userUsecase) GenerateUser(ctx context.Context, params UserGenerateReq) 
 	return UserResp{
 		Name:    params.Name,
 		Address: params.Address,
+		Email:   params.Email,
 		Role:    model.RoleMap[params.Role],
 	}, nil
 }
@@ -56,7 +58,8 @@ func (u *userUsecase) GetAllUser(ctx context.Context) ([]UserResp, error) {
 			Name:     v.Name,
 			Address:  v.Address,
 			Role:     model.RoleMap[v.Role],
-			Password: v.PasswordHash, // for testing purpose
+			Email:    v.Email,
+			Password: v.PasswordHash, // for testing purpose so we need to expose
 		})
 	}
 
@@ -64,7 +67,7 @@ func (u *userUsecase) GetAllUser(ctx context.Context) ([]UserResp, error) {
 }
 
 func (u *userUsecase) ValidateUser(ctx context.Context, params ValidateUserReq) *model.User {
-	user, err := u.userRepo.Get(ctx, params.Name)
+	user, err := u.userRepo.GetByEmail(ctx, params.Email)
 	if err != nil {
 		return nil
 	}
