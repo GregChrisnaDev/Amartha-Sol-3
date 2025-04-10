@@ -27,27 +27,27 @@ func (h *userHandler) UserGenerateHandler(w http.ResponseWriter, r *http.Request
 
 	var req usecase.UserGenerateReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid request body", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid request body", err.Error(), nil)
 		return
 	}
 
 	if req.Name == "" || req.Address == "" || req.Email == "" || req.Password == "" {
-		writeJSON(w, http.StatusBadRequest, "Missing parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Missing parameter", "invalid parameter", nil)
 		return
 	}
 
 	if req.Role != 1 && req.Role != 2 {
-		writeJSON(w, http.StatusBadRequest, "Invalid role", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid role", "invalid role", nil)
 		return
 	}
 
 	resp, err := h.userUC.GenerateUser(ctx, req)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", resp)
+	writeJSON(w, http.StatusOK, "Success", "", resp)
 }
 
 func (h *userHandler) GetAllUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -55,9 +55,9 @@ func (h *userHandler) GetAllUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	resp, err := h.userUC.GetAllUser(ctx)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", resp)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), resp)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", resp)
+	writeJSON(w, http.StatusOK, "Success", "", resp)
 }

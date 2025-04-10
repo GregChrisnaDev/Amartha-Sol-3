@@ -23,7 +23,7 @@ func main() {
 	pdfGenerator := pdfgenerator.Init()
 	transactionDB := postgres.NewDBTransaction(pgClient.DB)
 	mailClient := mail.Init()
-	redisClient := cache.Init()
+	redisClient := cache.NewRedisLock()
 
 	// init repository
 	userRepo := repository.InitUserRepo(pgClient)

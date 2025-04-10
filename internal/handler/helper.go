@@ -12,7 +12,7 @@ import (
 	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/usecase"
 )
 
-func writeJSON(w http.ResponseWriter, statusCode int, message string, data interface{}) {
+func writeJSON(w http.ResponseWriter, statusCode int, message string, errResponse string, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 
@@ -20,6 +20,7 @@ func writeJSON(w http.ResponseWriter, statusCode int, message string, data inter
 		Code:    statusCode,
 		Message: message,
 		Data:    data,
+		Error:   errResponse,
 	}
 	json.NewEncoder(w).Encode(resp)
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/GregChrisnaDev/Amartha-Sol-3/common"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/cache"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/mail"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/pdfgenerator"
@@ -16,7 +17,6 @@ import (
 	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/repository"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/storage"
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 )
 
 type lendUsecase struct {
@@ -27,7 +27,7 @@ type lendUsecase struct {
 	storageClient storage.Client
 	pdfGenerator  pdfgenerator.Client
 	mailClient    mail.Client
-	cacheClient   *redis.Client
+	cacheClient   cache.RedisLock
 }
 
 type LendUsecase interface {
@@ -37,7 +37,7 @@ type LendUsecase interface {
 	GetListLend(ctx context.Context, params uint64) ([]GetLendResp, error)
 }
 
-func InitLendUC(userRepo repository.UserRepository, loanRepo repository.LoanRepository, lendRepo repository.LendRepository, dbTransaction postgres.DBTransaction, storageClient storage.Client, pdfGenerator pdfgenerator.Client, mailClient mail.Client, cacheClient *redis.Client) LendUsecase {
+func InitLendUC(userRepo repository.UserRepository, loanRepo repository.LoanRepository, lendRepo repository.LendRepository, dbTransaction postgres.DBTransaction, storageClient storage.Client, pdfGenerator pdfgenerator.Client, mailClient mail.Client, cacheClient cache.RedisLock) LendUsecase {
 	return &lendUsecase{
 		userRepo:      userRepo,
 		loanRepo:      loanRepo,
@@ -80,11 +80,11 @@ func (u *lendUsecase) Simulate(ctx context.Context, params LendSimulateReq) (Len
 }
 
 func (u *lendUsecase) Invest(ctx context.Context, params InvestReq) error {
-	trLock := cache.NewRedisLock(u.cacheClient, fmt.Sprintf("invest_loan:%d", params.LoanID), 1000*time.Millisecond, 200*time.Millisecond)
-	if ok := trLock.Acquire(ctx); !ok {
+	lockKey := fmt.Sprintf("invest_loan:%d", params.LoanID)
+	if ok := u.cacheClient.Acquire(ctx, lockKey, 1000*time.Millisecond, 200*time.Millisecond); !ok {
 		return errors.New("failed to lock")
 	}
-	defer trLock.Release(ctx)
+	defer u.cacheClient.Release(ctx, lockKey)
 
 	loan, err := u.loanRepo.GetByIDStatus(ctx, params.LoanID, model.Approved)
 	if err != nil {
@@ -93,7 +93,7 @@ func (u *lendUsecase) Invest(ctx context.Context, params InvestReq) error {
 
 	if params.Lender.ID == loan.UserID {
 		log.Println("[Invest] forbidden user")
-		return errors.New("forbidden")
+		return errors.New("invalid user")
 	}
 
 	lendsByLoanId, err := u.lendRepo.GetByLoanId(ctx, loan.ID)
@@ -124,37 +124,43 @@ func (u *lendUsecase) Invest(ctx context.Context, params InvestReq) error {
 		}
 	} else {
 		// Update data
-		return u.dbTransaction.Execute(ctx, func(ctx context.Context) error {
-			if err = generateAgreementLetter(u.pdfGenerator, GenerateAgreementLetterReq{
-				NameLender:    params.Lender.Name,
-				NameLoaner:    loaner.Name,
-				AddressLender: params.Lender.Address,
-				AddressLoaner: loaner.Address,
-				SignLender:    storage.USER_SIGN_DIR + lendsByUID.UserSignPath,
-				Filename:      lendsByUID.AgreementFilePath,
-				CountROIProfitReq: CountROIProfitReq{
-					Rate:            float64(loan.Rate),
-					PrincipalAmount: loan.PrincipalAmount,
-					LoanDuration:    float64(loan.LoanDuration),
-					LendAmount:      params.Amount,
-				},
-			}); err != nil {
-				return err
-			}
 
+		if err = generateAgreementLetter(u.pdfGenerator, GenerateAgreementLetterReq{
+			NameLender:    params.Lender.Name,
+			NameLoaner:    loaner.Name,
+			AddressLender: params.Lender.Address,
+			AddressLoaner: loaner.Address,
+			SignLender:    storage.USER_SIGN_DIR + lendsByUID.UserSignPath,
+			Filename:      lendsByUID.AgreementFilePath,
+			CountROIProfitReq: CountROIProfitReq{
+				Rate:            float64(loan.Rate),
+				PrincipalAmount: loan.PrincipalAmount,
+				LoanDuration:    float64(loan.LoanDuration),
+				LendAmount:      params.Amount,
+			},
+		}); err != nil {
+			return err
+		}
+		err = u.dbTransaction.Execute(ctx, func(ctx context.Context) error {
 			if err := u.lendRepo.Update(ctx, model.Lend{ID: lendsByUID.ID, Amount: params.Amount}); err != nil {
 				return err
 			}
 			if params.Amount == loan.PrincipalAmount-totalFund {
 				return u.loanRepo.PromoteLoanToInvested(ctx, loan.ID)
 			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
 
-			go u.mailClient.SendMail(mail.AGREEMENT_MAIL_TEMPLATE, params.Lender.Email, mail.AgreementMailReq{
+		common.AsyncFunc(func() {
+			u.mailClient.SendMail(mail.AGREEMENT_MAIL_TEMPLATE, params.Lender.Email, mail.AgreementMailReq{
 				LenderName:   params.Lender.Name,
 				AgreementURL: fmt.Sprintf("%s/lend/agreement-letter?loan_id=%d", os.Getenv("SVC_HOST"), params.LoanID),
 			})
-			return nil
 		})
+		return nil
 	}
 
 	imageFileName := uuid.New().String() + ".jpg"
@@ -193,10 +199,11 @@ func (u *lendUsecase) Invest(ctx context.Context, params InvestReq) error {
 	if err != nil {
 		return err
 	}
-
-	go u.mailClient.SendMail(mail.AGREEMENT_MAIL_TEMPLATE, params.Lender.Email, mail.AgreementMailReq{
-		LenderName:   params.Lender.Name,
-		AgreementURL: fmt.Sprintf("%s/lend/agreement-letter?loan_id=%d", os.Getenv("SVC_HOST"), params.LoanID),
+	common.AsyncFunc(func() {
+		u.mailClient.SendMail(mail.AGREEMENT_MAIL_TEMPLATE, params.Lender.Email, mail.AgreementMailReq{
+			LenderName:   params.Lender.Name,
+			AgreementURL: fmt.Sprintf("%s/lend/agreement-letter?loan_id=%d", os.Getenv("SVC_HOST"), params.LoanID),
+		})
 	})
 
 	return nil

@@ -38,16 +38,16 @@ func (h *loanHandler) SimulateLoanHandler(w http.ResponseWriter, r *http.Request
 
 	var req usecase.SimulateLoanReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid request body", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid request body", err.Error(), nil)
 		return
 	}
 
 	if req.LoanDuration <= 0 || req.PrincipalAmount <= 0 || req.Rate <= 0 {
-		writeJSON(w, http.StatusBadRequest, "invalid parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "invalid parameter", "invalid parameter", nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", h.loanUC.Simulate(ctx, req))
+	writeJSON(w, http.StatusOK, "Success", "", h.loanUC.Simulate(ctx, req))
 }
 
 func (h *loanHandler) ProposeLoanHandler(w http.ResponseWriter, r *http.Request) {
@@ -56,30 +56,30 @@ func (h *loanHandler) ProposeLoanHandler(w http.ResponseWriter, r *http.Request)
 	// validate auth
 	user := validateUserAuth(r, h.userUC, model.Customer)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	var req usecase.ProposeLoanReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid request body", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid request body", err.Error(), nil)
 		return
 	}
 
 	req.UserID = user.ID
 
 	if req.PrincipalAmount <= 0 || req.LoanDuration <= 0 || req.Rate <= 0 {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid Parameter", nil)
 		return
 	}
 
 	err := h.loanUC.ProposeLoan(ctx, req)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", nil)
+	writeJSON(w, http.StatusOK, "Success", "", nil)
 }
 
 func (h *loanHandler) GetLoanByUIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -88,17 +88,17 @@ func (h *loanHandler) GetLoanByUIDHandler(w http.ResponseWriter, r *http.Request
 	// validate auth
 	user := validateUserAuth(r, h.userUC, model.Customer)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	resp, err := h.loanUC.GetLoanByLoanUID(ctx, user.ID)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", resp)
+	writeJSON(w, http.StatusOK, "Success", "", resp)
 }
 
 func (h *loanHandler) ApproveLoanHandler(w http.ResponseWriter, r *http.Request) {
@@ -107,26 +107,26 @@ func (h *loanHandler) ApproveLoanHandler(w http.ResponseWriter, r *http.Request)
 	// validate auth
 	user := validateUserAuth(r, h.userUC, model.Employee)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	// Limit request body size (10MB)
 	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		writeJSON(w, http.StatusUnauthorized, "Failed to parse multipart form", nil)
+		writeJSON(w, http.StatusUnauthorized, "Failed to parse multipart form", err.Error(), nil)
 		return
 	}
 
 	loanId, err := strconv.ParseUint(r.FormValue("loan_id"), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid loan_id", nil)
 		return
 	}
 
 	imageBuf, err := convertImageToBuffer(r, "proof_image")
 	if err != nil {
-		writeJSON(w, http.StatusUnauthorized, "Failed parse image", nil)
+		writeJSON(w, http.StatusUnauthorized, "Failed parse image", err.Error(), nil)
 		return
 	}
 
@@ -138,11 +138,11 @@ func (h *loanHandler) ApproveLoanHandler(w http.ResponseWriter, r *http.Request)
 
 	err = h.loanUC.ApproveLoan(ctx, req)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", nil)
+	writeJSON(w, http.StatusOK, "Success", "", nil)
 }
 
 func (h *loanHandler) GetProofPictureHandler(w http.ResponseWriter, r *http.Request) {
@@ -151,19 +151,19 @@ func (h *loanHandler) GetProofPictureHandler(w http.ResponseWriter, r *http.Requ
 	// validate auth
 	user := validateUserAuth(r, h.userUC, 0)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	loanId, err := strconv.ParseUint(r.URL.Query().Get("loan_id"), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid loan_id", nil)
 		return
 	}
 
 	resp, err := h.loanUC.GetProofPicture(ctx, loanId)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 	defer resp.File.Close()
@@ -181,17 +181,17 @@ func (h *loanHandler) GetListApprovedLoanHandler(w http.ResponseWriter, r *http.
 	// validate auth
 	user := validateUserAuth(r, h.userUC, 0)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	resp, err := h.loanUC.GetListApprovedLoan(ctx)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", resp)
+	writeJSON(w, http.StatusOK, "Success", "", resp)
 }
 
 func (h *loanHandler) DisburseLoanHandler(w http.ResponseWriter, r *http.Request) {
@@ -200,26 +200,26 @@ func (h *loanHandler) DisburseLoanHandler(w http.ResponseWriter, r *http.Request
 	// validate auth
 	user := validateUserAuth(r, h.userUC, model.Employee)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	// Limit request body size (10MB)
 	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		writeJSON(w, http.StatusUnauthorized, "Failed to parse multipart form", nil)
+		writeJSON(w, http.StatusUnauthorized, "Failed to parse multipart form", err.Error(), nil)
 		return
 	}
 
 	loanId, err := strconv.ParseUint(r.FormValue("loan_id"), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid loan_id", nil)
 		return
 	}
 
 	imageBuf, err := convertImageToBuffer(r, "user_sign")
 	if err != nil {
-		writeJSON(w, http.StatusUnauthorized, "Failed parse image", nil)
+		writeJSON(w, http.StatusUnauthorized, "Failed parse image", err.Error(), nil)
 		return
 	}
 
@@ -231,11 +231,11 @@ func (h *loanHandler) DisburseLoanHandler(w http.ResponseWriter, r *http.Request
 
 	err = h.loanUC.DisbursedLoan(ctx, req)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", nil)
+	writeJSON(w, http.StatusOK, "Success", "", nil)
 }
 
 func (h *loanHandler) GetAgreementLetterHandler(w http.ResponseWriter, r *http.Request) {
@@ -244,19 +244,19 @@ func (h *loanHandler) GetAgreementLetterHandler(w http.ResponseWriter, r *http.R
 	// validate auth
 	user := validateUserAuth(r, h.userUC, model.Customer)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	lendId, err := strconv.ParseUint(r.URL.Query().Get("lend_id"), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid lend_id", nil)
 		return
 	}
 
 	loanId, err := strconv.ParseUint(r.URL.Query().Get("loan_id"), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid loan_id", nil)
 		return
 	}
 
@@ -266,7 +266,7 @@ func (h *loanHandler) GetAgreementLetterHandler(w http.ResponseWriter, r *http.R
 		LoanID: loanId,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 	defer resp.File.Close()
@@ -284,13 +284,13 @@ func (h *loanHandler) GetListLenderHandler(w http.ResponseWriter, r *http.Reques
 	// validate auth
 	user := validateUserAuth(r, h.userUC, model.Customer)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	loanId, err := strconv.ParseUint(r.URL.Query().Get("loan_id"), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid loan_id", nil)
 		return
 	}
 
@@ -299,9 +299,9 @@ func (h *loanHandler) GetListLenderHandler(w http.ResponseWriter, r *http.Reques
 		LoanID: loanId,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", resp)
+	writeJSON(w, http.StatusOK, "Success", "", resp)
 }

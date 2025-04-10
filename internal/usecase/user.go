@@ -55,6 +55,7 @@ func (u *userUsecase) GetAllUser(ctx context.Context) ([]UserResp, error) {
 	var resp []UserResp
 	for _, v := range users {
 		resp = append(resp, UserResp{
+			ID:       v.ID,
 			Name:     v.Name,
 			Address:  v.Address,
 			Role:     model.RoleMap[v.Role],

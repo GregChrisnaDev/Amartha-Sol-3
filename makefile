@@ -57,5 +57,8 @@ migrate: tool-migrate
 migrate-down: tool-migrate
 	${CUR_DIR}/bin/migrate -path ${CUR_DIR}/migrations/ -database "$(DB)" -verbose down
 
+mockgen:
+	./script/mockgen_script.sh
+
 run:
 	go run cmd/main.go

@@ -132,21 +132,20 @@ Here's the APIs:
   make tool-migrate
 ```
 
+### 4. Setup env file
+```bash
+.env
+```
 
-### 4. Run database migrations
+### 5. Run database migrations
 ```bash
 make migrate
 ```
 
-### 5. Install dependencies
+### 6. Install dependencies
 ```bash
 go mod tidy
 go mod vendor
-```
-
-### 6. Setup env file
-```bash
-.env
 ```
 
 ### 7. Start application

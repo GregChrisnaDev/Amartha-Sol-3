@@ -17,6 +17,7 @@ type UserGenerateReq struct {
 }
 
 type UserResp struct {
+	ID       uint64 `json:"id"`
 	Name     string `json:"name"`
 	Address  string `json:"address"`
 	Role     string `json:"role"`

@@ -34,29 +34,29 @@ func (h *lendHandler) SimulateHandler(w http.ResponseWriter, r *http.Request) {
 	// validate auth
 	user := validateUserAuth(r, h.userUC, 0)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	var req usecase.LendSimulateReq
 	req.UserID = user.ID
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid request body", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid request body", err.Error(), nil)
 		return
 	}
 
 	if req.LoanID <= 0 || req.Amount <= 0 {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid Parameter", nil)
 		return
 	}
 
 	resp, err := h.lendUC.Simulate(ctx, req)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", resp)
+	writeJSON(w, http.StatusOK, "Success", "", resp)
 }
 
 func (h *lendHandler) InvestHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +66,7 @@ func (h *lendHandler) InvestHandler(w http.ResponseWriter, r *http.Request) {
 	// validate auth
 	user := validateUserAuth(r, h.userUC, model.Customer)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
@@ -74,29 +74,29 @@ func (h *lendHandler) InvestHandler(w http.ResponseWriter, r *http.Request) {
 	req.Lender = user
 	req.Amount, err = strconv.ParseFloat(r.FormValue("amount"), 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid amount", nil)
 		return
 	}
 
 	req.LoanID, err = strconv.ParseUint(r.FormValue("loan_id"), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid loan_id", nil)
 		return
 	}
 
 	req.UserSign, err = convertImageToBuffer(r, "user_sign")
 	if err != nil {
-		writeJSON(w, http.StatusUnauthorized, "Failed parse image", nil)
+		writeJSON(w, http.StatusUnauthorized, "Failed parse image", err.Error(), nil)
 		return
 	}
 
 	err = h.lendUC.Invest(ctx, req)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", nil)
+	writeJSON(w, http.StatusOK, "Success", "", nil)
 }
 
 func (h *lendHandler) GetAgreementLetterHandler(w http.ResponseWriter, r *http.Request) {
@@ -105,13 +105,13 @@ func (h *lendHandler) GetAgreementLetterHandler(w http.ResponseWriter, r *http.R
 	// validate auth
 	user := validateUserAuth(r, h.userUC, model.Customer)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	loanId, err := strconv.ParseUint(r.URL.Query().Get("loan_id"), 10, 64)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", nil)
+		writeJSON(w, http.StatusBadRequest, "Invalid Parameter", "Invalid loan_id", nil)
 		return
 	}
 
@@ -120,7 +120,7 @@ func (h *lendHandler) GetAgreementLetterHandler(w http.ResponseWriter, r *http.R
 		LoanID: loanId,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 	defer resp.File.Close()
@@ -138,15 +138,15 @@ func (h *lendHandler) GetListLenderHandler(w http.ResponseWriter, r *http.Reques
 	// validate auth
 	user := validateUserAuth(r, h.userUC, model.Customer)
 	if user == nil {
-		writeJSON(w, http.StatusUnauthorized, "Unauthorized", nil)
+		writeJSON(w, http.StatusUnauthorized, "Unauthorized", "User Unauthorized", nil)
 		return
 	}
 
 	resp, err := h.lendUC.GetListLend(ctx, user.ID)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, "Failed", nil)
+		writeJSON(w, http.StatusInternalServerError, "Failed", err.Error(), nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, "Success", resp)
+	writeJSON(w, http.StatusOK, "Success", "", resp)
 }
