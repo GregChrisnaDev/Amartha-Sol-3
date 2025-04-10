@@ -5,12 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/GregChrisnaDev/Amartha-Sol-3/common/cache"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/pdfgenerator"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/model"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/repository"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/storage"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 type loanUsecase struct {
@@ -19,6 +22,7 @@ type loanUsecase struct {
 	lendRepo      repository.LendRepository
 	storageClient storage.Client
 	pdfGenerator  pdfgenerator.Client
+	cacheClient   *redis.Client
 }
 
 type LoanUsecase interface {
@@ -32,19 +36,23 @@ type LoanUsecase interface {
 	GetListLender(ctx context.Context, params GetListLender) ([]GetLendResp, error)
 }
 
-func InitLoanUC(userRepo repository.UserRepository, loanRepo repository.LoanRepository, lendRepo repository.LendRepository, storageClient storage.Client, pdfGenerator pdfgenerator.Client) LoanUsecase {
+func InitLoanUC(userRepo repository.UserRepository, loanRepo repository.LoanRepository, lendRepo repository.LendRepository, storageClient storage.Client, pdfGenerator pdfgenerator.Client, cacheClient *redis.Client) LoanUsecase {
 	return &loanUsecase{
 		userRepo:      userRepo,
 		loanRepo:      loanRepo,
 		lendRepo:      lendRepo,
 		storageClient: storageClient,
 		pdfGenerator:  pdfGenerator,
+		cacheClient:   cacheClient,
 	}
 }
 
 func (u *loanUsecase) ProposeLoan(ctx context.Context, params ProposeLoanReq) error {
-	// TODO: add locking
-	// TODO: defer unlock
+	trLock := cache.NewRedisLock(u.cacheClient, fmt.Sprintf("propose_loan:%d", params.UserID), 1000*time.Millisecond, 200*time.Millisecond)
+	if ok := trLock.Acquire(ctx); !ok {
+		return errors.New("failed to lock")
+	}
+	defer trLock.Release(ctx)
 
 	if hasPendingLoan, err := u.loanRepo.PendingLoanExist(ctx, params.UserID); err != nil {
 		return err
@@ -90,8 +98,11 @@ func (u *loanUsecase) GetLoanByLoanUID(ctx context.Context, userId uint64) ([]Ge
 }
 
 func (u *loanUsecase) ApproveLoan(ctx context.Context, params PromoteLoanToApprovedReq) error {
-	// TODO: add locking
-	// TODO: defer unlock
+	trLock := cache.NewRedisLock(u.cacheClient, fmt.Sprintf("approve_loan:%d", params.LoanID), 1000*time.Millisecond, 200*time.Millisecond)
+	if ok := trLock.Acquire(ctx); !ok {
+		return errors.New("failed to lock")
+	}
+	defer trLock.Release(ctx)
 
 	if exist, err := u.loanRepo.LoanExist(ctx, params.LoanID, model.Proposed); err != nil {
 		return err
@@ -156,7 +167,11 @@ func (u *loanUsecase) GetListApprovedLoan(ctx context.Context) ([]GetLoanResp, e
 }
 
 func (u *loanUsecase) DisbursedLoan(ctx context.Context, params PromoteLoanToDisburseReq) error {
-	//TODO: Locking
+	trLock := cache.NewRedisLock(u.cacheClient, fmt.Sprintf("disburse_loan:%d", params.LoanID), 2000*time.Millisecond, 500*time.Millisecond)
+	if ok := trLock.Acquire(ctx); !ok {
+		return errors.New("failed to lock")
+	}
+	defer trLock.Release(ctx)
 
 	loan, err := u.loanRepo.GetByIDStatus(ctx, params.LoanID, model.Invested)
 	if err != nil {

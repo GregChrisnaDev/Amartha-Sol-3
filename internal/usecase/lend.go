@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
+	"github.com/GregChrisnaDev/Amartha-Sol-3/common/cache"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/mail"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/pdfgenerator"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/postgres"
@@ -14,6 +16,7 @@ import (
 	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/repository"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/internal/storage"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 type lendUsecase struct {
@@ -24,6 +27,7 @@ type lendUsecase struct {
 	storageClient storage.Client
 	pdfGenerator  pdfgenerator.Client
 	mailClient    mail.Client
+	cacheClient   *redis.Client
 }
 
 type LendUsecase interface {
@@ -33,7 +37,7 @@ type LendUsecase interface {
 	GetListLend(ctx context.Context, params uint64) ([]GetLendResp, error)
 }
 
-func InitLendUC(userRepo repository.UserRepository, loanRepo repository.LoanRepository, lendRepo repository.LendRepository, dbTransaction postgres.DBTransaction, storageClient storage.Client, pdfGenerator pdfgenerator.Client, mailClient mail.Client) LendUsecase {
+func InitLendUC(userRepo repository.UserRepository, loanRepo repository.LoanRepository, lendRepo repository.LendRepository, dbTransaction postgres.DBTransaction, storageClient storage.Client, pdfGenerator pdfgenerator.Client, mailClient mail.Client, cacheClient *redis.Client) LendUsecase {
 	return &lendUsecase{
 		userRepo:      userRepo,
 		loanRepo:      loanRepo,
@@ -42,6 +46,7 @@ func InitLendUC(userRepo repository.UserRepository, loanRepo repository.LoanRepo
 		storageClient: storageClient,
 		pdfGenerator:  pdfGenerator,
 		mailClient:    mailClient,
+		cacheClient:   cacheClient,
 	}
 }
 
@@ -75,8 +80,11 @@ func (u *lendUsecase) Simulate(ctx context.Context, params LendSimulateReq) (Len
 }
 
 func (u *lendUsecase) Invest(ctx context.Context, params InvestReq) error {
-	// TODO: Add Locking
-	// TODO: Defer Locking
+	trLock := cache.NewRedisLock(u.cacheClient, fmt.Sprintf("invest_loan:%d", params.LoanID), 1000*time.Millisecond, 200*time.Millisecond)
+	if ok := trLock.Acquire(ctx); !ok {
+		return errors.New("failed to lock")
+	}
+	defer trLock.Release(ctx)
 
 	loan, err := u.loanRepo.GetByIDStatus(ctx, params.LoanID, model.Approved)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/GregChrisnaDev/Amartha-Sol-3/common/cache"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/mail"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/pdfgenerator"
 	"github.com/GregChrisnaDev/Amartha-Sol-3/common/postgres"
@@ -22,6 +23,7 @@ func main() {
 	pdfGenerator := pdfgenerator.Init()
 	transactionDB := postgres.NewDBTransaction(pgClient.DB)
 	mailClient := mail.Init()
+	redisClient := cache.Init()
 
 	// init repository
 	userRepo := repository.InitUserRepo(pgClient)
@@ -30,8 +32,8 @@ func main() {
 
 	// init usecase
 	userUC := usecase.InitUserUC(userRepo)
-	loanUC := usecase.InitLoanUC(userRepo, loanRepo, lendRepo, storageClient, pdfGenerator)
-	lendUC := usecase.InitLendUC(userRepo, loanRepo, lendRepo, transactionDB, storageClient, pdfGenerator, mailClient)
+	loanUC := usecase.InitLoanUC(userRepo, loanRepo, lendRepo, storageClient, pdfGenerator, redisClient)
+	lendUC := usecase.InitLendUC(userRepo, loanRepo, lendRepo, transactionDB, storageClient, pdfGenerator, mailClient, redisClient)
 
 	// init handler
 	userHandler := handler.InitUserHandler(userUC)
