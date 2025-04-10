@@ -15,6 +15,7 @@ type loanHandler struct {
 }
 
 type LoanHandler interface {
+	SimulateLoanHandler(w http.ResponseWriter, r *http.Request)
 	ProposeLoanHandler(w http.ResponseWriter, r *http.Request)
 	GetLoanByUIDHandler(w http.ResponseWriter, r *http.Request)
 	ApproveLoanHandler(w http.ResponseWriter, r *http.Request)
@@ -30,6 +31,23 @@ func InitLoanHandler(userUC usecase.UserUsecase, loanUC usecase.LoanUsecase) Loa
 		userUC: userUC,
 		loanUC: loanUC,
 	}
+}
+
+func (h *loanHandler) SimulateLoanHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req usecase.SimulateLoanReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, "Invalid request body", nil)
+		return
+	}
+
+	if req.LoanDuration <= 0 || req.PrincipalAmount <= 0 || req.Rate <= 0 {
+		writeJSON(w, http.StatusBadRequest, "invalid parameter", nil)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, "Success", h.loanUC.Simulate(ctx, req))
 }
 
 func (h *loanHandler) ProposeLoanHandler(w http.ResponseWriter, r *http.Request) {

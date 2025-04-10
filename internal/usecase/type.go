@@ -29,6 +29,17 @@ type ValidateUserReq struct {
 	Password string
 }
 
+type SimulateLoanReq struct {
+	PrincipalAmount float64 `json:"principal_amount"`
+	Rate            uint32  `json:"rate"`
+	LoanDuration    uint32  `json:"loan_duration"`
+}
+
+type SimulateLoanResp struct {
+	TotalRepays        string `json:"total_repays"`
+	WeeklyInstallments string `json:"weekly_installments"`
+}
+
 type ProposeLoanReq struct {
 	UserID          uint64
 	PrincipalAmount float64 `json:"principal_amount"`

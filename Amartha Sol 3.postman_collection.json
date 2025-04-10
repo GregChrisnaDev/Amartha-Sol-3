@@ -1,0 +1,641 @@
+{
+	"info": {
+		"_postman_id": "b17995b1-26c5-4fc8-a5ef-451bd6991c4d",
+		"name": "Amartha Sol 3",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33397412"
+	},
+	"item": [
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Generate User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"{string}\",\r\n    \"address\": \"{string}\",\r\n    \"email\": \"{string}\",\r\n    \"password\": \"{string}\",\r\n    \"role\": \"{integer}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{LocalHost}}/user/generate",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"user",
+								"generate"
+							]
+						},
+						"description": "### Generate User\n\nThis endpoint allows you to generate a new user.\n\n#### Request Body\n\n- name (string, required): The name of the user.\n    \n- address (string, required): The address of the user.\n    \n- email (string, required): The email address of the user.\n    \n- password (string, required): The password for the user.\n    \n- role (integer, required): The role of the user.\n    \n\n#### Response\n\nThe response will be a JSON object with the following properties:\n\n- code (integer): The status code of the response.\n    \n- message (string): A message related to the response.\n    \n- data (object): An object containing the details of the generated user.\n    \n    - name (string): The name of the user.\n        \n    - address (string): The address of the user.\n        \n    - role (string): The role of the user.\n        \n    - email (string): The email address of the user.\n        \n\n#### JSON Schema\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\"type\": \"integer\"},\n    \"message\": {\"type\": \"string\"},\n    \"data\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\"type\": \"string\"},\n        \"address\": {\"type\": \"string\"},\n        \"role\": {\"type\": \"string\"},\n        \"email\": {\"type\": \"string\"}\n      }\n    }\n  }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{LocalHost}}/user/get-all",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"user",
+								"get-all"
+							]
+						},
+						"description": "### Get All Users\n\nThis endpoint makes an HTTP GET request to retrieve all users.\n\n#### Request Body\n\nThis request does not require a request body.\n\n#### Response\n\n- Status: 200\n    \n- Content-Type: application/json\n    \n\n``` json\n{\n  \"code\": 0,\n  \"message\": \"\",\n  \"data\": [\n    {\n      \"name\": \"\",\n      \"address\": \"\",\n      \"role\": \"\",\n      \"email\": \"\",\n      \"password\": \"\"\n    }\n  ]\n}\n\n ```\n\nThe response contains an array of user objects with their name, address, role, email, and password."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Loaner",
+			"item": [
+				{
+					"name": "Simulate Loan",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"principal_amount\": \"{integer}\",\r\n    \"rate\": \"{integer}\",\r\n    \"loan_duration\": \"{integer}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{LocalHost}}/loan/simulate",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"loan",
+								"simulate"
+							]
+						},
+						"description": "### Lend Simulation\n\nThis endpoint allows you to simulate a lending scenario by providing the loan ID and the loan amount.\n\n#### Request Body\n\n- `loan_id` (number) - The ID of the loan.\n    \n- `amount` (number) - The amount of the loan.\n    \n- `principal_amount` (integer) - The principal amount for the loan simulation.\n    \n- `rate` (integer) - The rate of interest for the loan simulation.\n    \n- `loan_duration` (integer) - The duration of the loan in months.\n    \n\n#### Response\n\nThe response of this request can be documented as a JSON schema:\n\n``` json\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"code\": {\n            \"type\": \"number\"\n        },\n        \"message\": {\n            \"type\": \"string\"\n        },\n        \"data\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"total_repays\": {\n                    \"type\": \"string\"\n                },\n                \"weekly_installments\": {\n                    \"type\": \"string\"\n                }\n            }\n        }\n    }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Own Loan",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{LocalHost}}/loan/get-all",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"loan",
+								"get-all"
+							]
+						},
+						"description": "### Get All Loans\n\nThis endpoint is used to retrieve all the loan records.\n\n#### Request Body\n\nThis request does not require a request body.\n\n#### Response\n\n- `code` (number): The status code of the response.\n    \n- `message` (string): Any additional message related to the response.\n    \n- `data` (array): An array of loan records, each containing the following attributes:\n    \n    - `id` (number): The unique identifier of the loan.\n        \n    - `user_id` (number): The user ID associated with the loan.\n        \n    - `principal_amount` (string): The principal amount of the loan.\n        \n    - `rate` (number): The interest rate of the loan.\n        \n    - `loan_duration` (string): The duration of the loan.\n        \n    - `status` (string): The status of the loan.\n        \n    - `proposed_date` (string): The proposed date of the loan.\n        \n    - `picture_proof_filepath` (string): The file path for the picture proof of the loan.\n        \n    - `approver_uid` (number): The unique identifier of the loan approver.\n        \n    - `approval_date` (string): The date of loan approval.\n        \n    - `disbursement_date` (string): The date of loan disbursement.\n        \n\n#### Example\n\n``` json\n{\n    \"code\": 0,\n    \"message\": \"\",\n    \"data\": [\n        {\n            \"id\": 0,\n            \"user_id\": 0,\n            \"principal_amount\": \"\",\n            \"rate\": 0,\n            \"loan_duration\": \"\",\n            \"status\": \"\",\n            \"proposed_date\": \"\",\n            \"picture_proof_filepath\": \"\",\n            \"approver_uid\": 0,\n            \"approval_date\": \"\",\n            \"disbursement_date\": \"\"\n        }\n    ]\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Propose Loan",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "greg3456",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "chrisnamahendra001@gmail.com",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"principal_amount\": \"{integer}\",\r\n    \"rate\": \"{integer}\",\r\n    \"loan_duration\": \"{integer}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{LocalHost}}/loan/propose",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"loan",
+								"propose"
+							]
+						},
+						"description": "### Loan Proposal Submission\n\nThis endpoint allows you to submit a loan proposal with the required details.\n\n#### Request Body\n\n- `principal_amount` (number): The principal amount for the loan proposal.\n    \n- `rate` (number): The interest rate for the loan proposal.\n    \n- `loan_duration` (number): The duration of the loan proposal in months.\n    \n\n#### Response\n\n- `Status`: 500\n    \n- `Content-Type`: application/json\n    \n- `code` (number): The error code for the response.\n    \n- `message` (string): The error message for the response."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Proof Pict",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{LocalHost}}/loan/proof-pict?loan_id={integer}",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"loan",
+								"proof-pict"
+							],
+							"query": [
+								{
+									"key": "loan_id",
+									"value": "{integer}"
+								}
+							]
+						},
+						"description": "This endpoint retrieves the proof picture associated with a specific loan ID. The response for this request is an image in JPG format.\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"loan_id\": {\n      \"type\": \"integer\"\n    },\n    \"proof_picture\": {\n      \"type\": \"string\",\n      \"format\": \"binary\"\n    }\n  }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get List Lender",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{LocalHost}}/loan/list-lender?loan_id={integer}",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"loan",
+								"list-lender"
+							],
+							"query": [
+								{
+									"key": "loan_id",
+									"value": "{integer}"
+								}
+							]
+						},
+						"description": "This endpoint retrieves a list of lenders for a specific loan based on the provided loan ID.\n\nThe response of the request can be documented as a JSON schema as follows:\n\n``` json\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"code\": {\n            \"type\": \"number\"\n        },\n        \"message\": {\n            \"type\": \"string\"\n        },\n        \"data\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"number\"\n                    },\n                    \"loan_id\": {\n                        \"type\": \"number\"\n                    },\n                    \"user_id\": {\n                        \"type\": \"number\"\n                    },\n                    \"amount\": {\n                        \"type\": \"string\"\n                    },\n                    \"agreement_file_path\": {\n                        \"type\": \"string\"\n                    },\n                    \"created_at\": {\n                        \"type\": \"string\"\n                    },\n                    \"updated_at\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        }\n    }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agreement Letter",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{LocalHost}}/loan/agreement-letter?loan_id={integer}&lend_id={integer}",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"loan",
+								"agreement-letter"
+							],
+							"query": [
+								{
+									"key": "loan_id",
+									"value": "{integer}"
+								},
+								{
+									"key": "lend_id",
+									"value": "{integer}"
+								}
+							]
+						},
+						"description": "This API used for get agreement letter for loaner."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Lender",
+			"item": [
+				{
+					"name": "Get List Approved Loan",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{LocalHost}}/loan/list-approved-loan",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"loan",
+								"list-approved-loan"
+							]
+						},
+						"description": "### Loan List Approved Loan\n\nThis endpoint retrieves a list of approved loans.\n\n#### Request\n\n- Method: GET\n    \n- URL: `{{LocalHost}}/loan/list-approved-loan`\n    \n\n#### Response\n\n- Status: 200\n    \n- Content-Type: application/json\n    \n\n##### Response Body\n\n``` json\n{\n  \"code\": 0,\n  \"message\": \"\",\n  \"data\": [\n    {\n      \"id\": 0,\n      \"user_id\": 0,\n      \"principal_amount\": \"\",\n      \"rate\": 0,\n      \"loan_duration\": \"\",\n      \"status\": \"\",\n      \"proposed_date\": \"\",\n      \"picture_proof_filepath\": \"\",\n      \"approver_uid\": 0,\n      \"approval_date\": \"\",\n      \"disbursement_date\": \"\"\n    }\n  ]\n}\n\n ```\n\nThe response contains an array of approved loan objects with attributes like `id`, `user_id`, `principal_amount`, `rate`, `loan_duration`, `status`, `proposed_date`, `picture_proof_filepath`, `approver_uid`, `approval_date`, and `disbursement_date`."
+					},
+					"response": []
+				},
+				{
+					"name": "Get List Lend",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{LocalHost}}/lend/list-lend",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"lend",
+								"list-lend"
+							]
+						},
+						"description": "### GET /lend/list-lend\n\nThis endpoint retrieves a list of lending information.\n\n#### Request Body\n\nThis endpoint does not require a request body.\n\n#### Response\n\n- `code` (number): The status code of the response.\n    \n- `message` (string): A message related to the response.\n    \n- `data` (array): An array of lending information objects.\n    \n    - `id` (number): The unique identifier of the lending information.\n        \n    - `loan_id` (number): The ID of the loan associated with the lending information.\n        \n    - `user_id` (number): The ID of the user associated with the lending information.\n        \n    - `amount` (string): The amount of the loan.\n        \n    - `agreement_file_path` (string): The file path of the loan agreement.\n        \n    - `created_at` (string): The timestamp of when the lending information was created.\n        \n    - `updated_at` (string): The timestamp of when the lending information was last updated.\n        \n\n#### Example\n\n``` json\n{\n  \"code\": 0,\n  \"message\": \"\",\n  \"data\": [\n    {\n      \"id\": 0,\n      \"loan_id\": 0,\n      \"user_id\": 0,\n      \"amount\": \"\",\n      \"agreement_file_path\": \"\",\n      \"created_at\": \"\",\n      \"updated_at\": \"\"\n    }\n  ]\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Simulate Lend",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"loan_id\": \"{integer}\",\r\n    \"amount\": \"{integer}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{LocalHost}}/lend/simulate",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"lend",
+								"simulate"
+							]
+						},
+						"description": "### Lend Simulation\n\nThis endpoint allows you to simulate a lending scenario by providing the loan ID and the loan amount.\n\n#### Request Body\n\n- `loan_id` (number) - The ID of the loan.\n    \n- `amount` (number) - The amount of the loan.\n    \n\n#### Response\n\nUpon a successful execution, the endpoint returns a JSON object with the following properties:\n\n- `roi` (number) - The rate of interest for the simulated loan.\n    \n- `profit` (string) - The profit generated from the simulated lending scenario.\n    \n\nExample:\n\n``` json\n{\n    \"code\": 0,\n    \"message\": \"\",\n    \"data\": {\n        \"roi\": 0,\n        \"profit\": \"\"\n    }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Invest",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "loan_id",
+									"value": "{integer}",
+									"type": "text"
+								},
+								{
+									"key": "user_sign",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "amount",
+									"value": "{integer}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{LocalHost}}/lend/invest",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"lend",
+								"invest"
+							]
+						},
+						"description": "### Lend/Invest\n\nThis endpoint allows the user to make an investment in a specific loan.\n\n#### Request\n\n- Method: POST\n    \n- URL: `{{LocalHost}}/lend/invest`\n    \n\n##### Headers\n\nNo specific headers provided.\n\n##### Parameters\n\n- `loan_id` (text): The ID of the loan to invest in.\n    \n- `user_sign` (file): The user's signature for the investment.\n    \n- `amount` (text): The amount to invest.\n    \n\n#### Response\n\n- Status: 200\n    \n- Content-Type: application/json\n    \n\n##### Body\n\n``` json\n{\n    \"code\": 0,\n    \"message\": \"\"\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agreement Letter",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{LocalHost}}/lend/agreement-letter?loan_id={integer}",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"lend",
+								"agreement-letter"
+							],
+							"query": [
+								{
+									"key": "loan_id",
+									"value": "{integer}"
+								}
+							]
+						},
+						"description": "This endpoint makes an HTTP GET request to retrieve the agreement letter for a specific loan. The request should include the query parameter \"loan_id\" with the ID of the loan for which the agreement letter is being requested.\n\n### Request Body\n\nThis request does not require a request body.\n\n### Response\n\nUpon a successful request, the response will contain the agreement letter in PDF format. The response status will be 200, and the Content-Type will be \"application/pdf\"."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Employee",
+			"item": [
+				{
+					"name": "Approve Loan",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "loan_id",
+									"value": "{integer}",
+									"type": "text"
+								},
+								{
+									"key": "proof_image",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{LocalHost}}/loan/approve",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"loan",
+								"approve"
+							]
+						},
+						"description": "This API endpoint is used to approve a loan application. The request should be sent as an HTTP POST to {{LocalHost}}/loan/approve with a form-data request body type. The request payload should include the 'loan_id' as a text parameter, and 'proof_image' as a file parameter, which represents the proof of income or any other relevant document.\n\n### Request Body\n\n- loan_id (text): Represents the ID of the loan application.\n    \n- proof_image (file): Represents the proof of income or relevant document.\n    \n\n### Response\n\nUpon successful execution, the API responds with a status code of 200 and a JSON object with the following structure:\n\n``` json\n{\n    \"code\": 0,\n    \"message\": \"\"\n}\n\n ```\n\n- code (number): Represents the status code of the response.\n    \n- message (string): Provides additional information about the response.\n    \n\n### Required Headers\n\nNo specific headers are mentioned as required for this request."
+					},
+					"response": []
+				},
+				{
+					"name": "Disburse Loan",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "loan_id",
+									"value": "{integer}",
+									"type": "text"
+								},
+								{
+									"key": "user_sign",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{LocalHost}}/loan/disburse",
+							"host": [
+								"{{LocalHost}}"
+							],
+							"path": [
+								"loan",
+								"disburse"
+							]
+						},
+						"description": "### Loan Disbursement\n\nThis endpoint is used to disburse a loan.\n\n#### Request Body\n\n- `loan_id` (text) - The ID of the loan to be disbursed.\n    \n- `user_sign` (file) - The signature of the user.\n    \n\n#### Response\n\nThe response is in JSON format with the following schema:\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"integer\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  }\n}\n\n ```"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "LocalHost",
+			"value": "127.0.0.1:9000",
+			"type": "string"
+		}
+	]
+}

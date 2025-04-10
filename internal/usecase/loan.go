@@ -26,6 +26,7 @@ type loanUsecase struct {
 }
 
 type LoanUsecase interface {
+	Simulate(ctx context.Context, params SimulateLoanReq) SimulateLoanResp
 	ProposeLoan(ctx context.Context, params ProposeLoanReq) error
 	GetLoanByLoanUID(ctx context.Context, userId uint64) ([]GetLoanResp, error)
 	ApproveLoan(ctx context.Context, params PromoteLoanToApprovedReq) error
@@ -47,6 +48,17 @@ func InitLoanUC(userRepo repository.UserRepository, loanRepo repository.LoanRepo
 	}
 }
 
+func (u *loanUsecase) Simulate(ctx context.Context, params SimulateLoanReq) SimulateLoanResp {
+	ratePerWeek := float64(params.Rate) / 52
+
+	totalRepays := (params.PrincipalAmount * ratePerWeek * float64(params.LoanDuration) / 100) + params.PrincipalAmount
+	weeklyInstallments := totalRepays / float64(params.LoanDuration)
+
+	return SimulateLoanResp{
+		TotalRepays:        convertToCurrency(totalRepays),
+		WeeklyInstallments: convertToCurrency(weeklyInstallments),
+	}
+}
 func (u *loanUsecase) ProposeLoan(ctx context.Context, params ProposeLoanReq) error {
 	trLock := cache.NewRedisLock(u.cacheClient, fmt.Sprintf("propose_loan:%d", params.UserID), 1000*time.Millisecond, 200*time.Millisecond)
 	if ok := trLock.Acquire(ctx); !ok {
