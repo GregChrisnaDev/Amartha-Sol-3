@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"{string}\",\r\n    \"address\": \"{string}\",\r\n    \"email\": \"{string}\",\r\n    \"password\": \"{string}\",\r\n    \"role\": \"{integer}\"\r\n}",
+							"raw": "{\r\n    \"name\": \"{string}\",\r\n    \"address\": \"{string}\",\r\n    \"email\": \"{string}\",\r\n    \"password\": \"{string}\",\r\n    \"role\": \"{integer}\" // customer (loaner & lender) -> 1 || employee -> 2\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -374,12 +374,12 @@
 							"basic": [
 								{
 									"key": "password",
-									"value": "",
+									"value": "greg1234",
 									"type": "string"
 								},
 								{
 									"key": "username",
-									"value": "",
+									"value": "chrisnamahendra@gmail.com",
 									"type": "string"
 								}
 							]

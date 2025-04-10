@@ -1,8 +1,6 @@
 export LINTER_VERSION ?= 1.55.0
 
 GO_PACKAGES ?= $(shell go list ./... | grep -v 'examples\|qtest\|mock')
-CMDS 		= $(shell cd cmd && find * -name 'main.go' -print)
-ODIR        := deploy/_output
 UNAME       := $(shell uname)
 CUR_DIR 	= $(shell pwd)
 
@@ -10,8 +8,6 @@ CUR_DIR 	= $(shell pwd)
 CGO_ENABLED := 1
 GOOS		:= linux
 GOARCH		:= amd64
-
-export VAR_SERVICES ?= $(foreach path, $(CMDS), $(path:%/main.go=%))
 
 ENV_FILE = .env
 ifneq ($(wildcard $(ENV_FILE)),)
@@ -36,9 +32,6 @@ endif
 bin:
 	@mkdir -p bin
 
-tool-lint: bin
-	@test -e ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v${LINTER_VERSION}
-
 tool-migrate: bin
 ifeq ($(MIGRATION_TOOL_EXISTS), 1)
 	@echo "Migration tool has been existed."
@@ -51,9 +44,6 @@ else ifeq ($(UNAME), Darwin)
 else
 	@echo "Your OS is not supported."
 endif
-
-lint: tool-lint
-	./bin/golangci-lint run -v --timeout 3m0s
 
 test:
 	@go test -race -v ${GO_PACKAGES}
