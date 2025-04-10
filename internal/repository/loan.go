@@ -257,7 +257,7 @@ func (r *loanRepository) PromoteLoanToDisbursed(ctx context.Context, params mode
 }
 
 func (r *loanRepository) GetAgreementFilePath(ctx context.Context, lendId, loanId, userId uint64) (string, error) {
-	rows := r.db.QueryRowContext(ctx, "SELECT agreement_file_path FROM lends le JOIN loans lo ON le.loan_id = lo.id WHERE  le.id = $1 AND lo.id = $2 AND lo.user_id = $3", lendId, loanId, userId)
+	rows := r.db.QueryRowContext(ctx, "SELECT agreement_file_path FROM lends le JOIN loans lo ON le.loan_id = lo.id WHERE  le.id = $1 AND lo.id = $2 AND lo.user_id = $3 AND", lendId, loanId, userId)
 
 	var filePath string
 	if err := rows.Scan(&filePath); err != nil {

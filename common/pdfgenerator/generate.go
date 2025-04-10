@@ -30,7 +30,6 @@ func (c *client) GenerateAgreementLetter(data AgreementLetterPDF) error {
 	intro := fmt.Sprintf(`Perjanjian Pinjaman ini ("Perjanjian") dibuat dan ditandatangani, oleh dan antara:
 
 		%s, berkedudukan di %s.
-
 		%s, berkedudukan di %s.
 
 		Kreditur dan Debitur selanjutnya secara bersama-sama disebut "Para Pihak".`, data.NameLender, data.AddressLender, data.NameLoaner, data.AddressLoaner)
@@ -39,7 +38,6 @@ func (c *client) GenerateAgreementLetter(data AgreementLetterPDF) error {
 
 	// Pasal sections
 	articles := []string{
-		"Pasal 1 - PINJAMAN",
 		"Pasal 2 - JAMINAN",
 		"Pasal 3 - BUNGA",
 		"Pasal 4 - JANGKA WAKTU PERJANJIAN",
@@ -57,6 +55,16 @@ func (c *client) GenerateAgreementLetter(data AgreementLetterPDF) error {
 		"Pasal 16 - KESELURUHAN PERJANJIAN",
 		"Pasal 17 - HAL-HAL LAIN",
 	}
+
+	subOne := fmt.Sprintf(`1.1.	Kreditur dengan ini sepakat untuk memberikan pinjaman kepada Debitur dan Debitur dengan ini menerima dari Kreditur sejumlah %s.
+	1.2.	Berdasarkan pinjaman sebagaimana tersebut di atas serta kewajiban Debitur yang timbul dari Perjanjian Pembaharuan Utang (Novasi) sebagaimana tersebut di atas, Debitur dengan ini mengakui berhutang kepada Kreditur sebesar %s selama %d minggu.`, data.LendAmount, data.LoanPayAmount, data.LoanDuration)
+
+	pdf.SetFont("Arial", "B", 12)
+	pdf.Cell(0, 7, "Pasal 1 - PINJAMAN")
+	pdf.Ln(7)
+	pdf.SetFont("Arial", "", 12)
+	pdf.MultiCell(0, 7, subOne, "", "", false)
+	pdf.Ln(7)
 
 	for _, article := range articles {
 		pdf.SetFont("Arial", "B", 12)
@@ -91,19 +99,19 @@ func (c *client) GenerateAgreementLetter(data AgreementLetterPDF) error {
 
 	// Debitur (right side)
 	pdf.SetY(y)
-	pdf.SetX(120) // half of A4 width + margin
+	pdf.SetX(110) // half of A4 width + margin
 	pdf.CellFormat(halfWidth, 10, "Debitur", "", 0, "C", false, 0, "")
 	pdf.Ln(20)
 
 	pdf.Ln(7)
 	if data.SignLoaner != "" {
-		pdf.ImageOptions(c.storagePath+data.SignLoaner, 140, y+10, 50, 35, false, fpdf.ImageOptions{
+		pdf.ImageOptions(c.storagePath+data.SignLoaner, 130, y+10, 50, 35, false, fpdf.ImageOptions{
 			ImageType: "JPG",
 		}, 0, "")
 
 	}
 	pdf.Ln(20)
-	pdf.SetX(120)
+	pdf.SetX(110)
 	pdf.CellFormat(halfWidth, 10, data.NameLoaner, "", 0, "C", false, 0, "")
 
 	if err := os.MkdirAll(c.storagePath+storage.AGREEMENT_LETTER_DIR, os.ModePerm); err != nil {

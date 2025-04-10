@@ -156,10 +156,11 @@ func (u *loanUsecase) GetListApprovedLoan(ctx context.Context) ([]GetLoanResp, e
 }
 
 func (u *loanUsecase) DisbursedLoan(ctx context.Context, params PromoteLoanToDisburseReq) error {
-	if exist, err := u.loanRepo.LoanExist(ctx, params.LoanID, model.Invested); err != nil {
+	//TODO: Locking
+
+	loan, err := u.loanRepo.GetByIDStatus(ctx, params.LoanID, model.Invested)
+	if err != nil {
 		return err
-	} else if !exist {
-		return errors.New("loan id not exist")
 	}
 
 	imageFileName := uuid.New().String() + ".jpg"
@@ -183,7 +184,7 @@ func (u *loanUsecase) DisbursedLoan(ctx context.Context, params PromoteLoanToDis
 			return err
 		}
 
-		err = u.pdfGenerator.GenerateAgreementLetter(pdfgenerator.AgreementLetterPDF{
+		if err = generateAgreementLetter(u.pdfGenerator, GenerateAgreementLetterReq{
 			NameLender:    lender.Name,
 			NameLoaner:    loaner.Name,
 			AddressLender: lender.Address,
@@ -191,8 +192,13 @@ func (u *loanUsecase) DisbursedLoan(ctx context.Context, params PromoteLoanToDis
 			SignLender:    storage.USER_SIGN_DIR + lend.UserSignPath,
 			SignLoaner:    storage.USER_SIGN_DIR + imageFileName,
 			Filename:      lend.AgreementFilePath,
-		})
-		if err != nil {
+			CountROIProfitReq: CountROIProfitReq{
+				Rate:            float64(loan.Rate),
+				PrincipalAmount: loan.PrincipalAmount,
+				LoanDuration:    float64(loan.LoanDuration),
+				LendAmount:      lend.Amount,
+			},
+		}); err != nil {
 			return err
 		}
 	}

@@ -8,4 +8,7 @@ type AgreementLetterPDF struct {
 	SignLender    string
 	SignLoaner    string
 	Filename      string
+	LendAmount    string
+	LoanPayAmount string
+	LoanDuration  uint32
 }

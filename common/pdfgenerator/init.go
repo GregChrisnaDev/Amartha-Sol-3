@@ -1,5 +1,7 @@
 package pdfgenerator
 
+import "os"
+
 type client struct {
 	storagePath string
 }
@@ -8,8 +10,8 @@ type Client interface {
 	GenerateAgreementLetter(data AgreementLetterPDF) error
 }
 
-func Init(template, storage string) Client {
-
+func Init() Client {
+	storage := os.Getenv("DEFAULT_STORAGE")
 	if storage == "" {
 		storage = "./etc/storage/"
 	}

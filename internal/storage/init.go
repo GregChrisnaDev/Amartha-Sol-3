@@ -1,5 +1,7 @@
 package storage
 
+import "os"
+
 type client struct {
 	mainPath string
 }
@@ -10,7 +12,8 @@ type Client interface {
 	GetMainPath() string
 }
 
-func Init(path string) Client {
+func Init() Client {
+	path := os.Getenv("DEFAULT_STORAGE")
 	if path == "" {
 		path = "./etc/storage/"
 	}
